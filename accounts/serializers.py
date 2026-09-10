@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 
-from .models import Staff
+from .models import Staff, AuditLog
 
 
 class StaffSerializer(serializers.ModelSerializer):
@@ -55,3 +55,26 @@ class StaffSerializer(serializers.ModelSerializer):
             instance.password = make_password(password)
 
         return super().update(instance, validated_data)
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditLog
+
+        fields = [
+            "id",
+            "staff",
+            "employee_id",
+            "role",
+            "action",
+            "module",
+            "status",
+            "description",
+            "ip_address",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "created_at",
+        ]
