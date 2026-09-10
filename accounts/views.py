@@ -9,8 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Staff
 from .serializers import StaffSerializer
-
-
+from .permissions import IsAdminStaff
 # ---------------------------------------------------------
 # STAFF CRUD
 # ---------------------------------------------------------
@@ -18,15 +17,12 @@ from .serializers import StaffSerializer
 class StaffListCreateView(generics.ListCreateAPIView):
     queryset = Staff.objects.all().order_by("-created_at")
     serializer_class = StaffSerializer
-    permission_classes = [AllowAny]
-
+    permission_classes = [IsAdminStaff]
 
 class StaffDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
-    permission_classes = [AllowAny]
-
-
+    permission_classes = [IsAdminStaff]
 # ---------------------------------------------------------
 # STAFF LOGIN
 # POST /api/login/staff/login/
@@ -118,3 +114,124 @@ class StaffLoginView(APIView):
 # POST /api/login/logout/
 # ---------------------------------------------------------
 
+# ---------------------------------------------------------
+# REFRESH ACCESS TOKEN
+# POST /api/login/token/refresh/
+# ---------------------------------------------------------
+
+class StaffTokenRefreshView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if not refresh_token:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Refresh token is missing."
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            response = Response(
+                {
+                    "status": "success"
+                },
+                status=status.HTTP_200_OK
+            )
+
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+                max_age=30 * 60,
+            )
+
+            return response
+
+        except Exception:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Invalid or expired refresh token."
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+# ---------------------------------------------------------
+# STAFF LOGOUT
+# POST /api/login/logout/
+# ---------------------------------------------------------
+
+class StaffLogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        response = Response(
+            {
+                "status": "success",
+                "message": "Logged out successfully"
+            },
+            status=status.HTTP_200_OK
+        )
+
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
+
+        return response
+        # ---------------------------------------------------------
+# REFRESH ACCESS TOKEN
+# POST /api/login/token/refresh/
+# ---------------------------------------------------------
+
+class StaffTokenRefreshView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if not refresh_token:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Refresh token is missing."
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            response = Response(
+                {
+                    "status": "success"
+                },
+                status=status.HTTP_200_OK
+            )
+
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+                max_age=30 * 60,
+            )
+
+            return response
+
+        except Exception:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Invalid or expired refresh token."
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
